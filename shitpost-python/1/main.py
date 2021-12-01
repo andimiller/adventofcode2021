@@ -46,7 +46,6 @@ if __name__ == "__main__":
             Stream(fh)
             .map(int)
             .zipWithNext()
-            .map(tupled(operator.lt))
-            .runCount(identity)
+            .runCount(tupled(operator.lt))
         )
         print(r)
