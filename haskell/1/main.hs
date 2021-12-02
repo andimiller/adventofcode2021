@@ -5,14 +5,13 @@ import           Text.Read
 
 readInput :: IO [Integer]
 readInput = do
-  content <- readFile "input.txt"
-  let ls      = lines content
-  let results = map read ls :: [Integer]
-  pure results
+  contents <- readFile "input.txt"
+  contents & lines & map read & pure
+
 
 sliding :: Int -> [a] -> [[a]]
-sliding n xs | length xs < n = []
-             | otherwise     = take n xs : sliding n (tail xs)
+sliding n [] = []
+sliding n xs = take n xs : sliding n (tail xs) & filter ((n ==) . length)
 
 lessThan :: Ord (a) => [a] -> Bool
 lessThan [a, b] = a < b
@@ -39,4 +38,3 @@ main :: IO ()
 main = do
   partOne
   partTwo
-  pure ()
