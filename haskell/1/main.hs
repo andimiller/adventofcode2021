@@ -1,13 +1,9 @@
-{-# LANGUAGE BlockArguments #-}
-
 import           Data.Function                  ( (&) )
+import           Data.Functor                   ( (<&>) )
 import           Text.Read
 
 readInput :: IO [Integer]
-readInput = do
-  contents <- readFile "input.txt"
-  contents & lines & map read & pure
-
+readInput = readFile "input.txt" <&> (map read . lines)
 
 sliding :: Int -> [a] -> [[a]]
 sliding n [] = []
@@ -17,21 +13,18 @@ lessThan :: Ord (a) => [a] -> Bool
 lessThan [a, b] = a < b
 
 partOne :: IO ()
-partOne = do
-  ints <- readInput
-  ints & sliding 2 & filter lessThan & length & show & putStrLn
-
+partOne =
+  readInput <&> sliding 2 <&> filter lessThan <&> length <&> show >>= putStrLn
 partTwo :: IO ()
-partTwo = do
-  ints <- readInput
-  ints
-    & sliding 3
-    & map sum
-    & sliding 2
-    & filter lessThan
-    & length
-    & show
-    & putStrLn
+partTwo =
+  readInput
+    <&> sliding 3
+    <&> map sum
+    <&> sliding 2
+    <&> filter lessThan
+    <&> length
+    <&> show
+    >>= putStrLn
 
 
 main :: IO ()
