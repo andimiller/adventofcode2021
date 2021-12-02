@@ -15,6 +15,7 @@ lessThan [a, b] = a < b
 partOne :: IO ()
 partOne =
   readInput <&> sliding 2 <&> filter lessThan <&> length <&> show >>= putStrLn
+
 partTwo :: IO ()
 partTwo =
   readInput
