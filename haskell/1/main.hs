@@ -3,7 +3,7 @@ import           Data.Functor                   ( (<&>) )
 import           Text.Read
 
 readInput :: IO [Integer]
-readInput = readFile "input.txt" <&> (map read . lines)
+readInput = readFile "input.txt" <&> lines <&> map read
 
 sliding :: Int -> [a] -> [[a]]
 sliding n [] = []
