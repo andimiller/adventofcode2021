@@ -84,25 +84,31 @@ contains = Set.isSubsetOf
 
 solve :: [(Set Char)] -> Maybe [(Int, Set Char)]
 solve cs = do
+  -- we can figure out the first ones from their bit length
   one   <- findN 1 cs
   four  <- findN 4 cs
   seven <- findN 7 cs
   eight <- findN 8 cs
   let cs' = (Set.fromList cs) `minus` (Set.fromList [one, four, seven, eight])
   let defg = eight `minus` seven
+  -- we know that six is the only one that contains (eight minus seven)
   six <- find (contains defg) cs'
   let cs'' = cs' `remove` six
   let c = (six `minus` (eight `minus` seven)) `minus` (seven `minus` one)
+  -- we know two is the only one that doesn't have the `c` segment lit up
   two <- find (contains c >>> not) cs''
   let cs'''    = cs'' `remove` two
   let f        = (four `minus` one) `minus` two
   let g        = (four `minus` one) `minus` f
   let filtered = (Set.filter (\x -> (length x) == 5) cs''')
+  -- we know that three is the one with length of 5 bits and no `f` segment
   three <- find (contains f >>> not) filtered
   let cs'''' = cs''' `remove` three
+  -- zero is the one with no `g`
   zero <- List.find (contains g >>> not) cs''''
   let cs''''' = cs'''' `remove` zero
   let b = two `minus` ((eight `minus` seven) `minus` (seven `minus` one))
+  -- we're left with nine and five, and can tell them apart with segment `b`
   nine <- find (contains b) cs'''''
   five <- find (contains b >>> not) cs'''''
   return [(0, zero), (1, one), (2, two), (3, three), (4, four), (5, five), (6, six), (7, seven), (8, eight), (9, nine)]
