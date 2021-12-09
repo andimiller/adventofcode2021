@@ -1,14 +1,8 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-import           Control.Applicative
 import           Data.Attoparsec.Text
-import           Data.Bifunctor                 ( Bifunctor
-                                                , bimap
-                                                )
 import           Data.Char                      ( digitToInt )
-import           Data.Foldable                  ( foldMap )
-import           Data.Function                  ( (&) )
 import           Data.Function
 import           Data.Functor                   ( (<&>) )
 import           Data.List                     as List
@@ -16,17 +10,11 @@ import           Data.Matrix                   as Matrix
 import           Data.Maybe                     ( catMaybes
                                                 , isJust
                                                 )
-import           Data.Monoid
-import           Data.Semigroup
 import           Data.Set                      as Set
-import           Data.Text                      ( Text
-                                                , pack
-                                                , unpack
-                                                )
-import           Debug.Trace
-import           Text.Read
+import           Data.Text                      ( pack )
 
 -- functions are composed left to right
+(>>>) :: (a -> b) -> (b -> c) -> (a -> c)
 f >>> g = g . f
 
 
