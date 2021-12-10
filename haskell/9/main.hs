@@ -22,7 +22,7 @@ line :: Parser [Int]
 line = many1 (digit <&> digitToInt)
 
 input :: Parser [[Int]]
-input = line `sepBy1` (char '\n')
+input = line `sepBy1` char '\n'
 
 -- helper to discard eithers
 rethrow :: (Show l) => Either l r -> r
@@ -38,44 +38,42 @@ neighbours m x y =
 
 
 isLow :: Matrix Int -> Int -> Int -> Bool
-isLow m x y = all (> (unsafeGet x y m)) (neighbours m x y)
+isLow m x y = all (> unsafeGet x y m) (neighbours m x y)
 
 positions :: Matrix Int -> [(Int, Int)]
 positions m = do
-  r <- [1 .. Matrix.nrows (m)]
-  c <- [1 .. Matrix.ncols (m)]
+  r <- [1 .. Matrix.nrows m]
+  c <- [1 .. Matrix.ncols m]
   return (r, c)
 
 partOne :: IO ()
 partOne = do
   m <- readInput
   let lows = List.filter (uncurry (isLow m)) (positions m)
-  let results = List.map ((flip (uncurry unsafeGet)) m) lows & List.map (+ 1)
+  let results = List.map ((+ 1) . flip (uncurry unsafeGet) m) lows
   let result  = sum results
-  putStrLn (show result)
+  print result
 
 getPos :: Matrix Int -> (Int, Int) -> Maybe Int
-getPos m = (flip (uncurry safeGet)) m
+getPos = flip (uncurry safeGet)
 
 unsafeGetPos :: Matrix Int -> (Int, Int) -> Int
-unsafeGetPos m = (flip (uncurry unsafeGet)) m
+unsafeGetPos = flip (uncurry unsafeGet)
 
 neighboursPos :: Matrix Int -> (Int, Int) -> [(Int, Int)]
-neighboursPos m (x, y) = List.filter ((getPos m) >>> isJust) [((x - 1), y), ((x + 1), y), (x, (y - 1)), (x, y + 1)]
+neighboursPos m (x, y) = List.filter (getPos m >>> isJust) [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
 
 
 baisinMembers :: Matrix Int -> (Int, Int) -> Set (Int, Int)
 baisinMembers m (x, y) =
-  List.filter ((unsafeGetPos m) >>> (> (unsafeGet x y m))) (neighboursPos m (x, y))
-    & List.filter ((unsafeGetPos m) >>> (< 9))
-    & Set.fromList
+  List.filter (unsafeGetPos m >>> (> unsafeGet x y m)) (neighboursPos m (x, y)) & List.filter (unsafeGetPos m >>> (< 9)) & Set.fromList
 
 expandBaisin :: Matrix Int -> Set (Int, Int) -> Set (Int, Int)
 expandBaisin m ps = Set.map (baisinMembers m) ps & Set.unions & Set.union ps
 
 repeatUntilStable :: Eq a => (a -> a) -> a -> a
-repeatUntilStable f prev | prev == (f prev) = prev
-                         | otherwise        = repeatUntilStable f (f prev)
+repeatUntilStable f prev | prev == f prev = prev
+                         | otherwise      = repeatUntilStable f (f prev)
 
 partTwo :: IO ()
 partTwo = do
@@ -84,8 +82,8 @@ partTwo = do
   let baisins      = List.map (repeatUntilStable (expandBaisin m)) lows
   let baisinSizes  = List.map Set.size baisins
   let threeLargest = List.take 3 (List.reverse (List.sort baisinSizes))
-  let result       = List.foldl (*) 1 threeLargest
-  putStrLn (show result)
+  let result       = product threeLargest
+  print result
 
 main :: IO ()
 main = do
