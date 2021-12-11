@@ -115,8 +115,7 @@ flashstep2 =
 partTwo :: IO ()
 partTwo = do
   m <- readInput
-  let totalOctopuses = (positions >>> length) m
-  let result         = unfoldr flashstep2 m & length & (+ 1)
+  let result = unfoldr flashstep2 m & length & (+ 1)
   print result
 
 main :: IO ()
