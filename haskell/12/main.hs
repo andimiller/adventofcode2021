@@ -21,6 +21,12 @@ import           Data.List                      ( nub
                                                 , sort
                                                 , group
                                                 )
+import           Data.List.NonEmpty            as NonEmpty
+                                                ( NonEmpty(..)
+                                                , (<|)
+                                                )
+import qualified Data.List.NonEmpty            as NonEmpty
+                                                ( filter )
 
 -- functions are composed left to right
 (>>>) :: (a -> b) -> (b -> c) -> (a -> c)
@@ -60,19 +66,18 @@ rethrow = either (show >>> error) id
 readInput :: IO [Link]
 readInput = readFile ("input.txt" :: String) <&> pack >>> parseOnly input >>> rethrow
 
-type Route = [Cave]
+type Route = NonEmpty Cave
 
 canTake :: Route -> Link -> Bool
-canTake []                _ = error "Routes cannot start empty"
-canTake (Small "end" : _) _ = False
-canTake (here : _) (Link f (Big _)) | here == f = True
-                                    | otherwise = False
-canTake route@(here : _) (Link f t@(Small _)) | here == f && notElem t route = True
-                                              | otherwise                    = False
+canTake (Small "end" :| _) _ = False
+canTake (here :| _) (Link f (Big _)) | here == f = True
+                                     | otherwise = False
+canTake route@(here :| _) (Link f t@(Small _)) | here == f && notElem t route = True
+                                               | otherwise                    = False
 
 branch :: [Link] -> Route -> [Route]
-branch _  r@(Small "end" : _) = [r]
-branch ls r                   = map ((: r) . to) (filter (canTake r) ls)
+branch _  r@(Small "end" :| _) = [r]
+branch ls r                    = map ((<| r) . to) (filter (canTake r) ls)
 
 repeatUntilStable :: Eq a => (a -> a) -> a -> a
 repeatUntilStable f prev | prev == f prev = prev
@@ -81,12 +86,15 @@ repeatUntilStable f prev | prev == f prev = prev
 step :: [Link] -> [Route] -> [Route]
 step ls = concatMap (branch ls)
 
+nonEmptySingleton :: a -> NonEmpty a
+nonEmptySingleton = (:| [])
+
 partOne :: IO ()
 partOne = do
   i <- readInput
   let backlinks = map reverseLink i
   let links     = i ++ backlinks & nub
-  let routes = repeatUntilStable (step links) [[Small "start"]]
+  let routes = repeatUntilStable (step links) [nonEmptySingleton (Small "start")]
   print (length routes)
 
 isSmall :: Cave -> Bool
@@ -95,21 +103,20 @@ isSmall (Big   _) = False
 
 canDoubleVisitSmall :: Cave -> Route -> Bool
 canDoubleVisitSmall (Small "start") _ = False
-canDoubleVisitSmall _               r = 2 `notElem` (filter isSmall r & sort & group & map length)
+canDoubleVisitSmall _               r = 2 `notElem` (NonEmpty.filter isSmall r & sort & group & map length)
 
 
 -- this version allows for double visiting of one small cave per run
 canTake2 :: Route -> Link -> Bool
-canTake2 []                _ = error "Routes cannot start empty"
-canTake2 (Small "end" : _) _ = False
-canTake2 (here : _) (Link f (Big _)) | here == f = True
-                                     | otherwise = False
-canTake2 route@(here : _) (Link f t@(Small _)) | here == f && (notElem t route || canDoubleVisitSmall t route) = True
-                                               | otherwise = False
+canTake2 (Small "end" :| _) _ = False
+canTake2 (here :| _) (Link f (Big _)) | here == f = True
+                                      | otherwise = False
+canTake2 route@(here :| _) (Link f t@(Small _)) | here == f && (notElem t route || canDoubleVisitSmall t route) = True
+                                                | otherwise = False
 
 branch2 :: [Link] -> Route -> [Route]
-branch2 _  r@(Small "end" : _) = [r]
-branch2 ls r                   = map ((: r) . to) (filter (canTake2 r) ls)
+branch2 _  r@(Small "end" :| _) = [r]
+branch2 ls r                    = map ((<| r) . to) (filter (canTake2 r) ls)
 
 step2 :: [Link] -> [Route] -> [Route]
 step2 ls = concatMap (branch2 ls)
@@ -119,7 +126,7 @@ partTwo = do
   i <- readInput
   let backlinks = map reverseLink i
   let links     = i ++ backlinks & nub
-  let routes = repeatUntilStable (step2 links) [[Small "start"]]
+  let routes = repeatUntilStable (step2 links) [nonEmptySingleton (Small "start")]
   print (length routes)
 
 main :: IO ()
