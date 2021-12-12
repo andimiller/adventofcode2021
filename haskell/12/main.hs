@@ -69,7 +69,6 @@ readInput = readFile ("input.txt" :: String) <&> pack >>> parseOnly input >>> re
 type Route = NonEmpty Cave
 
 canTake :: Route -> Link -> Bool
-canTake (Small "end" :| _) _ = False
 canTake (here :| _) (Link f (Big _)) | here == f = True
                                      | otherwise = False
 canTake route@(here :| _) (Link f t@(Small _)) | here == f && notElem t route = True
@@ -108,7 +107,6 @@ canDoubleVisitSmall _               r = 2 `notElem` (NonEmpty.filter isSmall r &
 
 -- this version allows for double visiting of one small cave per run
 canTake2 :: Route -> Link -> Bool
-canTake2 (Small "end" :| _) _ = False
 canTake2 (here :| _) (Link f (Big _)) | here == f = True
                                       | otherwise = False
 canTake2 route@(here :| _) (Link f t@(Small _)) | here == f && (notElem t route || canDoubleVisitSmall t route) = True
