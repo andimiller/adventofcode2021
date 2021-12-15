@@ -1,7 +1,8 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+
 
 import           Data.Attoparsec.Text           ( sepBy1
                                                 , parseOnly
@@ -37,7 +38,7 @@ import           Data.Monoid                    ( Endo(..)
 import           Data.List                      ( sort )
 import           Control.Monad.Loops            ( unfoldM )
 import Debug.Trace (traceShowId)
-import qualified  Data.Map as Map (Map(..), toList, adjust, fromList, insert) 
+import qualified  Data.Map as Map (Map(..), toList, adjust, fromList, insert)
 
 -- functions are composed left to right
 (>>>) :: (a -> b) -> (b -> c) -> (a -> c)
@@ -86,7 +87,7 @@ updatePos :: (a -> a) -> (Int, Int) -> Matrix a -> Matrix a
 updatePos f p m = m ! p & \a -> unsafeSet (f a) p m
 
 dijkstra :: Matrix Int -> Scores -> Int -> (Int, Int) -> Scores
-dijkstra md s distance p = foldr (\(k, v) -> Map.adjust (<> v) k) s (fmap (\t -> (t, md ! t + distance & Tentative)) (neighbours md p)) & Map.adjust (<> (Visited distance)) p
+dijkstra md s distance p = foldr (\(k, v) -> Map.adjust (<> v) k) s (fmap (\t -> (t, md ! t + distance & Tentative)) (neighbours md p)) & Map.adjust (<> Visited distance) p
 
 visited :: Node -> Node
 visited (Tentative i) = Visited i
@@ -104,7 +105,7 @@ unvisited m = (sort >>> take 1) do
 
 
 dijkstraStep :: Matrix Int -> Scores -> Scores
-dijkstraStep md s = foldr (\(d, p) -> \s' -> dijkstra md s' d p) s (unvisited s)
+dijkstraStep md s = foldr (\ (d, p) s' -> dijkstra md s' d p) s (unvisited s)
 
 partOne :: IO ()
 partOne = do
