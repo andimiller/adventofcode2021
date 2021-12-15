@@ -1,6 +1,7 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE TupleSections #-}
 
 
 
@@ -128,7 +129,7 @@ dijkstraStep md s = foldr (\(d, p) s' -> dijkstra md s' d p) s (unvisited s)
 partOne :: IO ()
 partOne = do
   md <- readInput
-  let mn = positions md & fmap (\p -> (p, Unvisited)) & Map.fromList & Map.insert (1, 1) (Tentative 0)
+  let mn = positions md & fmap (, Unvisited) & Map.fromList & Map.insert (1, 1) (Tentative 0)
   print md
   print mn
   print (unvisited mn)
