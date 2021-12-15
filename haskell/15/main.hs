@@ -9,7 +9,8 @@ import           Data.Attoparsec.Text           ( sepBy1
                                                 , many1
                                                 , char
                                                 , Parser
-                                                , digit, double
+                                                , digit
+                                                , double
                                                 )
 import           Data.Char                      ( digitToInt )
 import           Data.Function                  ( (&) )
@@ -23,22 +24,33 @@ import           Data.Matrix                   as Matrix
                                                 , setElem
                                                 , unsafeGet
                                                 , nrows
-                                                , ncols, unsafeSet, (!), mapPos
+                                                , ncols
+                                                , unsafeSet
+                                                , (!)
+                                                , mapPos
                                                 )
 import           Data.Text                      ( pack )
 import           Data.Maybe                     ( maybe
                                                 , catMaybes
                                                 , fromMaybe
-                                                , isNothing, maybeToList
+                                                , isNothing
+                                                , maybeToList
                                                 )
 import           Data.Monoid                    ( Endo(..)
                                                 , mconcat
-                                                , appEndo, mempty
+                                                , appEndo
+                                                , mempty
                                                 )
 import           Data.List                      ( sort )
 import           Control.Monad.Loops            ( unfoldM )
-import Debug.Trace (traceShowId)
-import qualified  Data.Map as Map (Map(..), toList, adjust, fromList, insert)
+import           Debug.Trace                    ( traceShowId )
+import qualified Data.Map                      as Map
+                                                ( Map(..)
+                                                , toList
+                                                , adjust
+                                                , fromList
+                                                , insert
+                                                )
 
 -- functions are composed left to right
 (>>>) :: (a -> b) -> (b -> c) -> (a -> c)
@@ -68,8 +80,12 @@ instance Monoid Node where
   mempty = Unvisited
 
 neighbours :: Matrix Int -> (Int, Int) -> [(Int, Int)]
-neighbours m (x, y) =
-  catMaybes [Matrix.safeGet (x - 1) y m $> (x-1, y), Matrix.safeGet (x + 1) y m $> (x+1, y), Matrix.safeGet x (y - 1) m $> (x, y-1), Matrix.safeGet x (y + 1) m $> (x, y+1)]
+neighbours m (x, y) = catMaybes
+  [ Matrix.safeGet (x - 1) y m $> (x - 1, y)
+  , Matrix.safeGet (x + 1) y m $> (x + 1, y)
+  , Matrix.safeGet x (y - 1) m $> (x, y - 1)
+  , Matrix.safeGet x (y + 1) m $> (x, y + 1)
+  ]
 
 positions :: Matrix a -> [(Int, Int)]
 positions m = do
@@ -87,30 +103,32 @@ updatePos :: (a -> a) -> (Int, Int) -> Matrix a -> Matrix a
 updatePos f p m = m ! p & \a -> unsafeSet (f a) p m
 
 dijkstra :: Matrix Int -> Scores -> Int -> (Int, Int) -> Scores
-dijkstra md s distance p = foldr (\(k, v) -> Map.adjust (<> v) k) s (fmap (\t -> (t, md ! t + distance & Tentative)) (neighbours md p)) & Map.adjust (<> Visited distance) p
+dijkstra md s distance p =
+  foldr (\(k, v) -> Map.adjust (<> v) k) s (fmap (\t -> (t, md ! t + distance & Tentative)) (neighbours md p))
+    & Map.adjust (<> Visited distance) p
 
 visited :: Node -> Node
 visited (Tentative i) = Visited i
-visited _ = error "can only visit tentative nodes"
+visited _             = error "can only visit tentative nodes"
 
 tentative :: Node -> Maybe Int
 tentative (Tentative i) = Just i
-tentative _ = Nothing
+tentative _             = Nothing
 
 unvisited :: Scores -> [(Int, (Int, Int))]
 unvisited m = (sort >>> take 1) do
   (p, t) <- Map.toList m
-  t' <- tentative t & maybeToList
+  t'     <- tentative t & maybeToList
   (t', p) & return
 
 
 dijkstraStep :: Matrix Int -> Scores -> Scores
-dijkstraStep md s = foldr (\ (d, p) s' -> dijkstra md s' d p) s (unvisited s)
+dijkstraStep md s = foldr (\(d, p) s' -> dijkstra md s' d p) s (unvisited s)
 
 partOne :: IO ()
 partOne = do
   md <- readInput
-  let mn = positions md & fmap (\p -> (p, Unvisited)) & Map.fromList & Map.insert (1,1) (Tentative 0)
+  let mn = positions md & fmap (\p -> (p, Unvisited)) & Map.fromList & Map.insert (1, 1) (Tentative 0)
   print md
   print mn
   print (unvisited mn)
@@ -118,8 +136,7 @@ partOne = do
   print result
 
 partTwo :: IO ()
-partTwo =
-  print "two"
+partTwo = print "two"
 
 main :: IO ()
 main = do
