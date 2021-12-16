@@ -29,6 +29,10 @@ import           Data.Matrix                   as Matrix
                                                 , unsafeSet
                                                 , (!)
                                                 , mapPos
+                                                , (<|>)
+                                                , (<->)
+                                                , matrix
+                                                , flatten
                                                 )
 import           Data.Text                      ( pack )
 import           Data.Maybe                     ( maybe
@@ -44,7 +48,6 @@ import           Data.Monoid                    ( Endo(..)
                                                 )
 import           Data.List                      ( sort )
 import           Control.Monad.Loops            ( unfoldM )
-import           Debug.Trace                    ( traceShowId )
 import qualified Data.Map                      as Map
                                                 ( Map(..)
                                                 , toList
@@ -128,16 +131,34 @@ dijkstraStep md s = foldr (\(d, p) s' -> dijkstra md s' d p) s (unvisited s)
 
 partOne :: IO ()
 partOne = do
-  md <- readInput
-  let mn = positions md & fmap (, Unvisited) & Map.fromList & Map.insert (1, 1) (Tentative 0)
-  print md
-  print mn
-  print (unvisited mn)
-  let result = until (unvisited >>> length >>> traceShowId >>> (== 0)) (dijkstraStep md) mn
-  print result
+  print "one"
+  --md <- readInput
+--  let mn = positions md & fmap (, Unvisited) & Map.fromList & Map.insert (1, 1) (Tentative 0)
+--  print md
+--  print mn
+--  print (unvisited mn)
+--  let result = until (unvisited >>> length >>> (== 0)) (dijkstraStep md) mn
+--  print result
+
+amplifyN :: Int -> Int
+amplifyN n | n > 9     = 1
+           | otherwise = n
+
+amplify :: Matrix Int -> Matrix Int
+amplify = fmap ((+ 1) >>> amplifyN)
+
+applyN 0 f a = a
+applyN n f a = applyN (n - 1) f (f a)
 
 partTwo :: IO ()
-partTwo = print "two"
+partTwo = do
+  md <- readInput
+  print md
+  print (amplify md)
+  let enlarged = matrix 5 5 (\(x, y) -> (x - 1) + (y - 1)) & fmap (\i -> applyN i amplify md) & flatten
+  let mn       = positions enlarged & fmap (, Unvisited) & Map.fromList & Map.insert (1, 1) (Tentative 0)
+  let result   = until (unvisited >>> length >>> (== 0)) (dijkstraStep enlarged) mn
+  print result
 
 main :: IO ()
 main = do
